@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique - DetectPlant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📋 Historique des analyses</h1>
+            <a href="/" class="back-btn">← Retour à l'accueil</a>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if predictions %}
+            <div class="card">
+                <div class="table-header">
+                    <h2>📈 Toutes les analyses</h2>
+                    <p class="count">{{ predictions|length }} analyse(s) au total</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Plante</th>
+                                <th>Diagnostic</th>
+                                <th>Confiance</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in predictions %}
+                            <tr>
+                                <td>#{{ pred.id }}</td>
+                                <td>
+                                    <img src="{{ url_for('static', filename='uploads/' + pred.filename) }}" 
+                                         class="thumbnail" 
+                                         alt="Image analyse {{ pred.id }}"
+                                         onerror="this.src='https://via.placeholder.com/80?text=Image'">
+                                </td>
+                                <td>{{ pred.plant_type }}</td>
+                                <td>
+                                    {% if 'Sain' in pred.disease %}
+                                        <span class="disease-tag healthy">{{ pred.disease }}</span>
+                                    {% else %}
+                                        <span class="disease-tag diseased">{{ pred.disease }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="confidence-bar">
+                                        <div class="bar-fill" style="width: {{ pred.confidence }}%"></div>
+                                        <span class="confidence-text">{{ pred.confidence }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if pred.date %}
+                                        {{ pred.date.strftime('%d/%m/%Y %H:%M') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/delete/{{ pred.id }}" 
+                                       class="delete-btn"
+                                       onclick="return confirm('Supprimer cette analyse ?')">
+                                        🗑️
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Statistiques - VERSION CORRIGÉE -->
+            <div class="card stats-card">
+                <h2>📊 Statistiques</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-value">{{ predictions|length }}</div>
+                        <div class="stat-label">Analyses totales</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">
+                            {% set healthy_count = 0 %}
+                            {% for pred in predictions %}
+                                {% if 'Sain' in pred.disease %}
+                                    {% set healthy_count = healthy_count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ healthy_count }}
+                        </div>
+                        <div class="stat-label">Plantes saines</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">
+                            {% set total_conf = 0 %}
+                            {% for pred in predictions %}
+                                {% set total_conf = total_conf + pred.confidence %}
+                            {% endfor %}
+                            {% if predictions|length > 0 %}
+                                {{ "%.1f"|format(total_conf / predictions|length) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Confiance moyenne</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">
+                            {% set tomato_count = 0 %}
+                            {% for pred in predictions %}
+                                {% if pred.plant_type == 'Tomate' %}
+                                    {% set tomato_count = tomato_count + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ tomato_count }}
+                        </div>
+                        <div class="stat-label">Tomates analysées</div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Si pas d'analyses -->
+            <div class="card empty-state">
+                <div class="empty-icon">📭</div>
+                <h2>Aucune analyse enregistrée</h2>
+                <p>Commencez par analyser votre première feuille !</p>
+                <a href="/" class="btn-primary">🔍 Faire une première analyse</a>
+            </div>
+        {% endif %}
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/" class="btn-primary">🏠 Retour à l'accueil</a>
+            <a href="/about" class="btn-secondary">ℹ️ À propos</a>
+        </div>
+
+        <footer class="footer">
+            <p>DetectPlant - Projet Advanced ML © 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

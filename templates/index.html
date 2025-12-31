@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détection Maladies Plantes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <header class="header">
+            <h1>🌿 DetectPlant</h1>
+            <p class="subtitle">Détection intelligente des maladies des plantes</p>
+        </header>
+
+        <!-- Messages flash -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Formulaire d'upload -->
+        <div class="card">
+            <h2>📤 Analyser une feuille</h2>
+            <form action="/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+                
+                <div class="form-group">
+                    <label for="plant_type">Type de plante :</label>
+                    <select name="plant_type" id="plant_type" required>
+                        <option value="">-- Sélectionnez --</option>
+                        <option value="Tomate">Tomate 🍅</option>
+                        <option value="Pomme">Pomme 🍎</option>
+                        <option value="Vigne">Vigne 🍇</option>
+                        <option value="Pomme de terre">Pomme de terre 🥔</option>
+                        <option value="Blé">Blé 🌾</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Image de la feuille :</label>
+                    <div class="file-upload">
+                        <input type="file" name="file" id="file" accept="image/*" required>
+                        <label for="file" class="file-label">
+                            <span>📁 Choisir un fichier</span>
+                        </label>
+                    </div>
+                    <small>Formats acceptés: JPG, PNG, GIF (max 16MB)</small>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    🧠 Analyser avec l'IA
+                </button>
+            </form>
+        </div>
+
+        <!-- Résultats -->
+        {% if show_results %}
+        <div class="card result-card">
+            <h2>📊 Résultats de l'analyse</h2>
+            
+            <div class="result-grid">
+                <!-- Image -->
+                <div class="result-image">
+                    <h3>Image analysée :</h3>
+                    <div class="image-container">
+                        <img src="{{ url_for('static', filename='uploads/' + filename) }}" 
+                             alt="Feuille analysée">
+                    </div>
+                </div>
+
+                <!-- Diagnostic -->
+                <div class="result-details">
+                    <h3>Diagnostic IA :</h3>
+                    
+                    <div class="diagnostic-box">
+                        <div class="info-row">
+                            <span class="label">Type de plante :</span>
+                            <span class="value">{{ plant_type }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">Maladie détectée :</span>
+                            <span class="value disease">{{ disease }}</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">Niveau de confiance :</span>
+                            <span class="value confidence">{{ confidence }}%</span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="label">Date d'analyse :</span>
+                            <!-- LIGNE MODIFIÉE ICI -->
+                            <span class="value">{{ current_date }}</span>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a href="/history" class="btn-secondary">📋 Voir l'historique</a>
+                        <a href="/" class="btn-outline">🔄 Nouvelle analyse</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Info section -->
+        <div class="card info-card">
+            <h2>ℹ️ Comment ça marche ?</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Sélectionnez la plante</h4>
+                    <p>Choisissez le type de plante à analyser</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>Uploader l'image</h4>
+                    <p>Téléchargez une photo claire de la feuille</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>Analyse IA</h4>
+                    <p>Notre modèle détecte les maladies automatiquement</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Résultats & Suivi</h4>
+                    <p>Consultez le diagnostic et l'historique</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <a href="/history" class="nav-link">
+                📊 Historique des analyses
+            </a>
+            <a href="/about" class="nav-link">
+                ℹ️ À propos du projet
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Projet Advanced Machine Learning - © 2025</p>
+            <p>Détection de maladies des plantes avec IA</p>
+        </footer>
+    </div>
+
+    <script>
+        // Afficher le nom du fichier sélectionné
+        document.getElementById('file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Aucun fichier sélectionné';
+            document.querySelector('.file-label span').textContent = fileName;
+        });
+
+        // Animation des cartes
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
